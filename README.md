@@ -52,3 +52,14 @@ See [install instructions](tensorflow_serving/g3doc/setup.md).
 
 * [Serving architecture overview](tensorflow_serving/g3doc/architecture_overview.md)
 * [TensorFlow website](http://tensorflow.org)
+
+To build exclusively on ubuntu14.04 ppc64le
+-------------------------------------------
+
+```bash
+$ git clone -b ppc-tensorflow-serving --recurse-submodules git@github.ibm.com:abdasgupta/tensorflow-serving.git
+$ cd tensorflow-serving/tensorflow
+$ ./configure
+$ cd ..
+$ bazel build -j 5 --ram_utilization_factor 50 -c opt tensorflow_serving/...
+```
