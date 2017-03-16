@@ -30,7 +30,7 @@ RUN curl -fSsL -O https://bootstrap.pypa.io/get-pip.py && \
 
 RUN pip install grpcio
 
-COPY inception-export/ /inception-export/
+COPY flowers-export/ /flowers-export/
 COPY tensorflow-0.12.1-cp27-cp27mu-linux_ppc64le.whl  /
 COPY tensorflow_model_server /
 
