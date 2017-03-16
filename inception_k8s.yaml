@@ -17,7 +17,7 @@ spec:
         - -c
         args:
         - /root/tensorflow-serving/bazel-bin/tensorflow_serving/model_servers/tensorflow_model_server
-          --port=9000 --use_saved_model=false --model_name=inception --model_base_path=/root/tensorflow-serving/inception-export
+          --port=9000 --use_saved_model=false --model_name=inception --model_base_path=/root/tensorflow-serving/flowers-export
         ports:
         - containerPort: 9000
 ---
