@@ -27,6 +27,7 @@ import os.path
 # This is a placeholder for a Google-internal import.
 
 import tensorflow as tf
+from tensorflow.python.framework import graph_util
 
 from tensorflow.contrib.session_bundle import exporter
 from inception import inception_model
@@ -41,28 +42,29 @@ tf.app.flags.DEFINE_integer('image_size', 299,
 FLAGS = tf.app.flags.FLAGS
 
 
-NUM_CLASSES = 1000
+NUM_CLASSES = 5
 NUM_TOP_CLASSES = 5
 
 WORKING_DIR = os.path.dirname(os.path.realpath(__file__))
-SYNSET_FILE = os.path.join(WORKING_DIR, 'imagenet_lsvrc_2015_synsets.txt')
-METADATA_FILE = os.path.join(WORKING_DIR, 'imagenet_metadata.txt')
 
 
 def export():
-  # Create index->synset mapping
-  synsets = []
-  with open(SYNSET_FILE) as f:
-    synsets = f.read().splitlines()
-  # Create synset->metadata mapping
-  texts = {}
-  with open(METADATA_FILE) as f:
-    for line in f.read().splitlines():
-      parts = line.split('\t')
-      assert len(parts) == 2
-      texts[parts[0]] = parts[1]
+    # We retrieve our checkpoint fullpath
+    checkpoint = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
+    input_checkpoint = checkpoint.model_checkpoint_path
+    print(input_checkpoint)
 
-  with tf.Graph().as_default():
+    # We clear devices to allow TensorFlow to control on which device it will load operations
+    # clear_devices = True
+
+    # We import the meta graph and retrieve a Saver
+    # saver = tf.train.import_meta_graph(input_checkpoint + '.meta', clear_devices=clear_devices)
+
+    #with tf.Graph().as_default():
+    # We retrieve the protobuf graph definition
+    graph = tf.get_default_graph()
+    input_graph_def = graph.as_graph_def()
+
     # Build inference model.
     # Please refer to Tensorflow inception model for details.
 
@@ -81,37 +83,22 @@ def export():
     # Transform output to topK result.
     values, indices = tf.nn.top_k(logits, NUM_TOP_CLASSES)
 
-    # Create a constant string Tensor where the i'th element is
-    # the human readable class description for the i'th index.
-    # Note that the 0th index is an unused background class
-    # (see inception model definition code).
-    class_descriptions = ['unused background']
-    for s in synsets:
-      class_descriptions.append(texts[s])
+    class_descriptions = ['unused background', 'daisy', 'dandelion', 'roses', 'sunflowers', 'tulips']
     class_tensor = tf.constant(class_descriptions)
 
-    classes = tf.contrib.lookup.index_to_string(tf.to_int64(indices),
-                                                mapping=class_tensor)
+    serialized_tf_example = tf.placeholder(tf.string, name='tf_example')
 
+    classes = tf.contrib.lookup.index_to_string(tf.to_int64(indices),
+                                              mapping=class_tensor)
     # Restore variables from training checkpoint.
     variable_averages = tf.train.ExponentialMovingAverage(
         inception_model.MOVING_AVERAGE_DECAY)
     variables_to_restore = variable_averages.variables_to_restore()
     saver = tf.train.Saver(variables_to_restore)
+
     with tf.Session() as sess:
       # Restore variables from training checkpoints.
-      ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
-      if ckpt and ckpt.model_checkpoint_path:
-        saver.restore(sess, ckpt.model_checkpoint_path)
-        # Assuming model_checkpoint_path looks something like:
-        #   /my-favorite-path/imagenet_train/model.ckpt-0,
-        # extract global_step from it.
-        global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
-        print('Successfully loaded model from %s at step=%s.' %
-              (ckpt.model_checkpoint_path, global_step))
-      else:
-        print('No checkpoint file found at %s' % FLAGS.checkpoint_dir)
-        return
+      saver.restore(sess, input_checkpoint)
 
       # Export inference model.
       init_op = tf.group(tf.initialize_all_tables(), name='init_op')
@@ -130,7 +117,7 @@ def export():
           init_op=init_op,
           default_graph_signature=classification_signature,
           named_graph_signatures=named_graph_signature)
-      model_exporter.export(FLAGS.export_dir, tf.constant(global_step), sess)
+      model_exporter.export(FLAGS.export_dir, tf.constant("4999"), sess)
       print('Successfully exported model to %s' % FLAGS.export_dir)
 
 
