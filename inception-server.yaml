@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: inception-server
+spec:
+  template:
+    metadata:
+      labels:
+        app: inception-server
+    spec:
+      containers:
+      - name: inception-server-flowers
+        image: tf-inception-server-flowers
+        imagePullPolicy: "IfNotPresent"
+        command:
+        - /bin/sh
+        - -c
+        args:
+        - /tensorflow_model_server --port=9000 --use_saved_model=false --model_name=inception --model_base_path=/flowers-export
+        ports:
+        - containerPort: 9000
+      nodeSelector:
+        kubernetes.io/hostname: 192.168.122.253
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: inception-service
+  name: inception-service
+spec:
+  ports:
+  - port: 9000
+  selector:
+    app: inception-server

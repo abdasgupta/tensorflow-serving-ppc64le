@@ -64,3 +64,9 @@ $ ./configure
 $ cd ..
 $ bazel build -j 5 --ram_utilization_factor 50 -c opt tensorflow_serving/...
 ```
+
+To use the Dockerfile
+---------------------
+```bash
+$ docker build -t tf-inception-server-flowers -f Dockerfile .
+```
