@@ -58,7 +58,7 @@ To build exclusively on ubuntu14.04 ppc64le
 
 ```bash
 $ sudo pip install grpcio
-$ git clone -b ppc-tensorflow-serving --recurse-submodules git@github.ibm.com:abdasgupta/tensorflow-serving.git
+$ git clone -b ppc-tensorflow-serving --recurse-submodules https://github.com/abdasgupta/tensorflow-serving-ppc64le tensorflow-serving
 $ cd tensorflow-serving/tensorflow
 $ ./configure
 $ cd ..
